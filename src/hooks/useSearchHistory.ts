@@ -1,0 +1,45 @@
+import { useState, useEffect } from 'react';
+
+export interface SearchHistoryItem {
+  query: string;
+  searchType: string;
+  timestamp: number;
+}
+
+export const useSearchHistory = () => {
+  const [history, setHistory] = useState<SearchHistoryItem[]>([]);
+
+  useEffect(() => {
+    const saved = localStorage.getItem('book-finder-search-history');
+    if (saved) {
+      try {
+        setHistory(JSON.parse(saved));
+      } catch (error) {
+        console.error('Failed to parse search history from localStorage:', error);
+      }
+    }
+  }, []);
+
+  const addToHistory = (query: string, searchType: string) => {
+    const item: SearchHistoryItem = {
+      query,
+      searchType,
+      timestamp: Date.now()
+    };
+    
+    const updated = [item, ...history.filter(h => h.query !== query)].slice(0, 10);
+    setHistory(updated);
+    localStorage.setItem('book-finder-search-history', JSON.stringify(updated));
+  };
+
+  const clearHistory = () => {
+    setHistory([]);
+    localStorage.removeItem('book-finder-search-history');
+  };
+
+  return {
+    history,
+    addToHistory,
+    clearHistory
+  };
+};
